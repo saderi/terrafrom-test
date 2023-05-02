@@ -5,11 +5,13 @@ provider "google" {
   zone        = var.zone
 }
 
+
 resource "google_project_service" "compute_service" {
   project = var.project
   service = "compute.googleapis.com"
 }
 
+/************* Create VPC *************/
 resource "google_compute_network" "privet_network" {
   name                    = "privet-network"
   auto_create_subnetworks = false
@@ -22,6 +24,7 @@ resource "google_compute_subnetwork" "privet_subnetwork" {
   network       = google_compute_network.privet_network.id
 }
 
+/************* Create NAT and Router !!! *************/
 resource "google_compute_router" "router" {
   name    = "quickstart-router"
   network = google_compute_network.privet_network.self_link
@@ -43,6 +46,7 @@ resource "google_compute_route" "private_network_internet_route" {
   priority    = 100
 }
 
+/************* Create PRIVET Instance and Instance group *************/
 resource "google_compute_instance" "privet_nginx" {
   name                      = "privet-nginx"
   machine_type              = "f1-micro"
@@ -82,6 +86,7 @@ resource "google_compute_instance_group" "nginx_group" {
   }
 }
 
+/************* Create Load Balancer *************/
 resource "google_compute_health_check" "nginx_health_check" {
   name        = "nginx-health-check"
   description = "Health check via TCP"
@@ -132,6 +137,7 @@ resource "google_compute_forwarding_rule" "nginx-loadbalancer" {
   network_tier          = "STANDARD"
   target                = google_compute_target_http_proxy.default.id
 }
+
 
 resource "google_compute_firewall" "load_balancer_inbound" {
   name    = "nginx-load-balancer"
